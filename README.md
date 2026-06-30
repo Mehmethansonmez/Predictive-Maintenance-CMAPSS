@@ -38,9 +38,15 @@ Sistem, motorun anlık durumunu belirlemek için aşağıdaki kritik parametrele
 * **Görselleştirme & Web Arayüzü:** `Streamlit`, `Matplotlib`
 
 ## 🚀 Kurulum ve Kullanım (Installation & Setup)
-Projeyi kendi lokal ortamınızda (bilgisayarınızda) çalıştırmak isterseniz aşağıdaki adımları izleyebilirsiniz:
+Projeyi kendi lokal ortamınızda (bilgisayarınızda) çalıştırmak isterseniz aşağıdaki komutları tek seferde kopyalayıp terminalinize yapıştırabilirsiniz:
 
-**1. Repoyu Klonlayın:**
 ```bash
-git clone [https://https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS](https://[github.com/KULLANICI_ADINIZ/CMAPSS-Predictive-Maintenance.git](https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS))
-cd CMAPSS-Predictive-Maintenance
+# 1. Repoyu Klonlayın ve Klasöre Girin
+git clone [https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git](https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git)
+cd Predictive-Maintenance-CMAPSS
+
+# 2. Gerekli Kütüphaneleri Yükleyin (Python 3.11 önerilir)
+pip install -r requirements.txt
+
+# 3. Uygulamayı Başlatın
+streamlit run app.py

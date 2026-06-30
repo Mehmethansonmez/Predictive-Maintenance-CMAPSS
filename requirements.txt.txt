@@ -1,0 +1,6 @@
+streamlit
+tensorflow-cpu
+shap
+pandas
+numpy
+matplotlib

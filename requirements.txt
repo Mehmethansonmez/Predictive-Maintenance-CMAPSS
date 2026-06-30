@@ -2,5 +2,5 @@ streamlit
 tensorflow-cpu
 shap
 pandas
-numpy
+numpy<2.0.0
 matplotlib

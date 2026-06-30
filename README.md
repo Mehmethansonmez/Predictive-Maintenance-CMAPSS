@@ -40,6 +40,7 @@ Sistem, motorun anlık durumunu belirlemek için aşağıdaki kritik parametrele
 ## 🚀 Kurulum ve Kullanım (Installation & Setup)
 Projeyi kendi lokal ortamınızda (bilgisayarınızda) çalıştırmak isterseniz aşağıdaki komutları tek seferde kopyalayıp terminalinize yapıştırabilirsiniz:
 
+NOT: KURULUM YAPMADAN DOĞRUDAN KULLANMAK İSTERSENİZ SAYFADA BULUNAN LİNK ÜZERİNDEN DE ERİŞEBİLİRSİNİZ.
 ```bash
 # 1. Repoyu Klonlayın ve Klasöre Girin
 git clone [https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git](https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git)

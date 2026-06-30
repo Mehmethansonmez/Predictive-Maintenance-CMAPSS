@@ -58,7 +58,7 @@ def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, fl
     return np.clip(simulated_data, 0, 1)
 
 # --- ARAYÜZ TASARIMI ---
-st.title("🛠️ Jet Motoru Öngörücü Bakım (Predictive Maintenance) Sistemi")
+st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
 st.markdown("Derin öğrenme (LSTM) ve SHAP (Explainable AI) tabanlı motor ömrü tahmin kokpiti.")
 
 st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
@@ -133,7 +133,7 @@ if st.sidebar.button("🚀 Canlı Sensör Analizini Başlat", type="primary"):
         
         # --- Geliştirdiğimiz Açılır Kapanır SHAP Paneli ---
         with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
-            st.caption("Aşağıdaki grafik, modelin RUL tahminini yaparken hangi sensörlerden (özelliklerden) etkilendiğini açıklar. (Grafiğin yüklenmesi birkaç saniye sürebilir.)")
+            st.caption("Aşağıdaki grafik, modelin RUL tahminini yaparken hangi sensörlerden (özelliklerden) etkilendiğini açıklar.")
             
             with st.spinner('Matris grafiği çiziliyor...'):
                 explainer = shap.GradientExplainer(model, background_data) 

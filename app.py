@@ -44,7 +44,7 @@ def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, fl
     return np.clip(simulated_data, 0, 1)
 
 # --- ARAYÜZ TASARIMI ---
-st.title("🛠️ Jet Motoru Kestirimci Bakım (Predictive Maintenance) Sistemi")
+st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
 st.markdown("Derin öğrenme (LSTM) ve SHAP (Explainable AI) tabanlı motor ömrü tahmin kokpiti.")
 
 # 3. YENİ KONTROL PANELİ

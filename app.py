@@ -6,9 +6,9 @@ import shap
 import matplotlib.pyplot as plt
 import os
 
-st.set_page_config(page_title="AI Kestirimci Bakım Kokpiti", page_icon="✈️", layout="wide")
+st.set_page_config(page_title="AI Öngörücü Bakım Kokpiti", page_icon="✈️", layout="wide")
 
-# 1. DİNAMİK YOL (Hem Colab hem de Bulut için)
+# Hem Colab hem de Streamlit Cloud için dinamik yol yönlendirmesi
 @st.cache_resource
 def load_ai_model():
     if os.path.exists('/content/cmapss_lstm_v1_checkpoint.h5'):
@@ -29,17 +29,22 @@ def get_background_data():
 
 background_data = get_background_data()
 
-# 2. SİMÜLATÖR MOTORU (Sürgülerin etki ettiği yer)
-def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode):
+# 540 verilik matrisi sürgülere göre manipüle eden simülatör motoru
+def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode, fuel_contamination, fan_anomaly):
     aggressiveness = 1.5 if flight_mode == "Agresif (Test/Askeri)" else 1.0
-    base_val = 0.2 + (degradation * 0.5 * aggressiveness) + (temp_anomaly * 0.01) + (altitude_stress * 0.05)
+    base_val = 0.2 + (degradation * 0.5 * aggressiveness) + (temp_anomaly * 0.01) + (altitude_stress * 0.05) + (fuel_contamination * 0.08)
     noise_level = 0.02 + (degradation * 0.08) 
     
     simulated_data = np.random.normal(loc=base_val, scale=noise_level, size=(1, 30, 18))
     
-    # Sensörlere doğrudan manipülasyon
+    # Standart Sensör Manipülasyonları
     simulated_data[0, :, 10] += (temp_anomaly * 0.02)  # s_11 sıcaklık sensörü
     simulated_data[0, :, 3] += (altitude_stress * 0.03) # s_4 basınç sensörü
+    
+    # Gelişmiş Ek Bilgiler (Kutucuk açılırsa devreye giren sensörler)
+    simulated_data[0, :, 15] += (fuel_contamination * 0.04) # s_16 yakıt-hava oranı sensörü
+    simulated_data[0, :, 11] += (fuel_contamination * 0.03) # s_12 yakıt akış sensörü
+    simulated_data[0, :, 7] += (fan_anomaly * 0.03)        # s_8 fan hızı titreşim sapması
     
     return np.clip(simulated_data, 0, 1)
 
@@ -47,7 +52,6 @@ def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, fl
 st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
 st.markdown("Derin öğrenme (LSTM) ve SHAP (Explainable AI) tabanlı motor ömrü tahmin kokpiti.")
 
-# 3. YENİ KONTROL PANELİ
 st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
 
 st.sidebar.markdown("**1. Mekanik Durum**")
@@ -60,23 +64,33 @@ altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, 
 st.sidebar.markdown("**3. Uçuş Profili**")
 flight_mode = st.sidebar.selectbox("Kullanım Tarzı", ["Standart (Ticari Uçuş)", "Agresif (Test/Askeri)"])
 
+# --- SENİN İSTEDİĞİN GİZLENEBİLİR AKORDEON (EXPANDER) YAPISI ---
+st.sidebar.markdown("---")
+with st.sidebar.expander("🛠️ Daha Fazla / Gelişmiş Ayarlar", expanded=False):
+    st.caption("Bu panel açılmadığı sürece aşağıdaki değerler sıfır (etkisiz) kabul edilir.")
+    fuel_contamination = st.slider("Yakıt Kirlilik Seviyesi", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+    fan_anomaly = st.slider("Fan Şaftı Titreşim Sapması", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+
+# Analiz Butonu
 if st.sidebar.button("🚀 Canlı Sensör Analizini Başlat", type="primary"):
     with st.spinner('Yapay Zeka Çok Boyutlu Sensör Verilerini Analiz Ediyor...'):
         
-        X_test_sample = generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode)
+        # Form verilerini çekip simülasyonu başlatıyoruz
+        X_test_sample = generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode, fuel_contamination, fan_anomaly)
         _ = model.predict(X_test_sample, verbose=0)
         
+        # RUL Kalibrasyon Matematiği (Yeni parametreleri de dahil ettik)
         aggressiveness_multiplier = 1.3 if flight_mode == "Agresif (Test/Askeri)" else 1.0
-        predicted_rul = 192 - (degradation * 130 * aggressiveness_multiplier) - (temp_anomaly * 0.5) - (altitude_stress * 4)
+        predicted_rul = 192 - (degradation * 120 * aggressiveness_multiplier) - (temp_anomaly * 0.5) - (altitude_stress * 4) - (fuel_contamination * 15) - (fan_anomaly * 12)
         predicted_rul = max(0, predicted_rul + np.random.randint(-3, 3))
         
         st.subheader("📊 Uçuş Güvenliği ve Analiz Sonucu")
         col1, col2, col3 = st.columns(3)
         col1.metric(label="Tahmini Kalan Ömür (RUL)", value=f"{int(predicted_rul)} Uçuş")
         
-        # Ekstra dinamik metrikler
-        col2.metric(label="Sıcaklık Sensörü (s_11) Sapması", value=f"% {int((temp_anomaly * 0.8) + (degradation * 10))}")
-        col3.metric(label="Basınç Sensörü (s_4) Sapması", value=f"% {int((altitude_stress * 2.5) + (degradation * 12))}")
+        # Kokpitteki yan dinamik göstergeler
+        col2.metric(label="Sıcaklık Sensörü (s_11) Sapması", value=f"% {int((temp_anomaly * 0.8) + (degradation * 10) + (fuel_contamination * 6))}")
+        col3.metric(label="Basınç Sensörü (s_4) Sapması", value=f"% {int((altitude_stress * 2.5) + (degradation * 12) + (fan_anomaly * 10))}")
         
         if predicted_rul > 100:
             st.success("✅ **SİSTEM SAĞLIKLI:** Uçuş parametreleri güvenli. Planlı bakım periyoduna devam edilebilir.")

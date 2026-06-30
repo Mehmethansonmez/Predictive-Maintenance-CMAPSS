@@ -54,7 +54,7 @@ def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, fl
     return np.clip(simulated_data, 0, 1)
 
 # --- ARAYÜZ TASARIMI ---
-st.title("🛠️ Jet Motoru Öngörücü Bakım (Predictive Maintenance) Sistemi")
+st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
 st.markdown("Derin öğrenme (LSTM) ve SHAP tabanlı **Gerçek Zamanlı** motor ömrü tahmin kokpiti.")
 
 st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
@@ -142,7 +142,7 @@ if live_mode:
     st.info("💡 **Bilgi:** Canlı telemetri modundayken yapay zeka saniyede bir yeni veri üretip sistemi test eder. Derinlemesine SHAP analizi yapmak için canlı yayını durdurup 'Tekil Analiz' butonunu kullanın.")
 
     # 1.5 saniye bekle ve sayfayı otomatik yenile (Sonsuz Döngü)
-    time.sleep(1.5)
+    time.sleep(0.5)
     st.rerun()
 
 else:

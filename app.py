@@ -188,6 +188,47 @@ else:
 
             st.markdown("---")
             
+            # --- ENDÜSTRİYEL OTOMASYON (SCADA) RAPOR EKRANI ---
+            import json
+            from datetime import datetime
+            
+            st.markdown("📠 **Endüstriyel Otomasyon (SCADA) ve İş Emri**")
+            
+            # Otomasyon için durum kodlaması
+            rapor_durumu = "ACIL_MRO_MUDAHALESI" if predicted_rul <= 40 else ("PLANLI_BAKIM_GEREKLI" if predicted_rul <= 100 else "NORMAL")
+            
+            # Makinelerin okuyabileceği formatta (JSON) veri paketi hazırlıyoruz
+            scada_verisi = {
+                "Cihaz_ID": "JET-ENG-TR-042",
+                "Tarih_Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Tahmini_RUL_Ucus": int(predicted_rul),
+                "Sistem_Durumu": rapor_durumu,
+                "Kritik_Sensorler": {
+                    "s_11_Sicaklik_Sapmasi_Yuzde": int((temp_anomaly * 0.8) + (degradation * 10) + (fuel_contamination * 4)),
+                    "s_4_Basinc_Sapmasi_Yuzde": int((altitude_stress * 2.5) + (degradation * 12) + (bypass_degradation * 8))
+                },
+                "Ucus_Profili": flight_mode,
+                "Otomasyon_Aksiyonu": "Bakim ekibine is emri gonderildi." if predicted_rul <= 40 else "Veriler sisteme kaydedildi."
+            }
+            
+            scada_json = json.dumps(scada_verisi, indent=4)
+            
+            col_scada1, col_scada2 = st.columns([2, 1])
+            with col_scada1:
+                st.caption("Aşağıdaki JSON verisi, arıza durumunda sahadaki PLC veya ERP sistemlerine iletilecek olan standart makine okuma (machine-readable) paketidir.")
+            with col_scada2:
+                # İndirme Butonu
+                st.download_button(
+                    label="📥 İş Emrini SCADA'ya Gönder (.json)",
+                    data=scada_json,
+                    file_name=f"SCADA_Is_Emri_ENG042_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
+                    mime="application/json",
+                    type="secondary",
+                    use_container_width=True
+                )
+            
+            st.markdown("---")
+            
             with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
                 st.caption("Aşağıdaki grafik, modelin RUL tahminini yaparken hangi sensörlerden etkilendiğini açıklar.")
                 

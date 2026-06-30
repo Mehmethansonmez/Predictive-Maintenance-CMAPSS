@@ -12,10 +12,11 @@ st.set_page_config(page_title="AI Öngörücü Bakım Kokpiti", page_icon="✈�
 # Hem Colab hem de Streamlit Cloud için dinamik yol yönlendirmesi
 @st.cache_resource
 def load_ai_model():
-    if os.path.exists('/content/cmapss_lstm_v1_checkpoint.h5'):
-        return load_model('/content/cmapss_lstm_v1_checkpoint.h5')
+    # Eski v1 modeli FD004 modeli ile değiştirildi
+    if os.path.exists('/content/cmapss_fd004_lstm_v1.h5'):
+        return load_model('/content/cmapss_fd004_lstm_v1.h5')
     else:
-        return load_model('models/cmapss_lstm_v1_checkpoint.h5')
+        return load_model('models/cmapss_fd004_lstm_v1.h5')
 
 model = load_ai_model()
 
@@ -30,28 +31,29 @@ def get_background_data():
 
 background_data = get_background_data()
 
-# 540 verilik matrisi manipüle eden simülatör motoru
+# FD004 Z-Score Normalizasyonuna Uygun Yeni Simülatör (14 Sensör)
 def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode, 
                                   fuel_contamination, fan_anomaly, bypass_degradation, bleed_leakage, core_fatigue):
     
     aggressiveness = 1.5 if flight_mode == "Agresif (Test/Askeri)" else 1.0
     
-    base_val = 0.2 + (degradation * 0.5 * aggressiveness) + (temp_anomaly * 0.01) + (altitude_stress * 0.05) + \
-               (fuel_contamination * 0.04) + (bypass_degradation * 0.03) + (bleed_leakage * 0.04)
-    noise_level = 0.02 + (degradation * 0.08) 
+    # Yeni model Z-Score normalize olduğu için taban değer sıfır etrafındadır
+    base_val = 0.0 + (degradation * 0.5 * aggressiveness)
+    noise_level = 0.05 + (degradation * 0.05) 
     
-    simulated_data = np.random.normal(loc=base_val, scale=noise_level, size=(1, 30, 18))
+    # 1 Batch, 30 Zaman Adımı, 14 Sensör
+    simulated_data = np.random.normal(loc=base_val, scale=noise_level, size=(1, 30, 14))
     
-    simulated_data[0, :, 10] += (temp_anomaly * 0.02)  
-    simulated_data[0, :, 3] += (altitude_stress * 0.03) 
-    simulated_data[0, :, 15] += (fuel_contamination * 0.04) 
-    simulated_data[0, :, 11] += (fuel_contamination * 0.03) 
-    simulated_data[0, :, 7] += (fan_anomaly * 0.03)         
-    simulated_data[0, :, 14] += (bypass_degradation * 0.05) 
-    simulated_data[0, :, 16] += (bleed_leakage * 0.04)      
-    simulated_data[0, :, 8] -= (core_fatigue * 0.03)        
+    # Yeni 14'lü dizilime göre nokta atışı sensör manipülasyonları:
+    simulated_data[0, :, 6] += (temp_anomaly * 0.05)       # s_11 (Sıcaklık)
+    simulated_data[0, :, 2] += (altitude_stress * 0.05)    # s_4 (Basınç)
+    simulated_data[0, :, 7] += (fuel_contamination * 0.05) # s_12 (Yakıt Akışı)
+    simulated_data[0, :, 4] += (fan_anomaly * 0.05)        # s_8 (Fan Titreşimi)
+    simulated_data[0, :, 10] += (bypass_degradation * 0.05)# s_15 (Bypass Oranı)
+    simulated_data[0, :, 11] += (bleed_leakage * 0.05)     # s_17 (Pnömatik Kaçak)
+    simulated_data[0, :, 5] -= (core_fatigue * 0.05)       # s_9 (Çekirdek Hızı Düşüşü)
     
-    return np.clip(simulated_data, 0, 1)
+    return simulated_data
 
 # --- ARAYÜZ TASARIMI ---
 st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")

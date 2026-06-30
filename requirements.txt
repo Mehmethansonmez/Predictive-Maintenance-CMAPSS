@@ -1,5 +1,5 @@
 streamlit
-tensorflow
+tensorflow-cpu==2.15.0
 shap
 pandas
 numpy<2.0.0

@@ -142,7 +142,7 @@ if live_mode:
     st.info("💡 **Bilgi:** Canlı telemetri modundayken yapay zeka saniyede bir yeni veri üretip sistemi test eder. Derinlemesine SHAP analizi yapmak için canlı yayını durdurup 'Tekil Analiz' butonunu kullanın.")
 
     # 1.5 saniye bekle ve sayfayı otomatik yenile (Sonsuz Döngü)
-    time.sleep(0.5)
+    time.sleep(1.0)
     st.rerun()
 
 else:

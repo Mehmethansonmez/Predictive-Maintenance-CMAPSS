@@ -229,4 +229,7 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.caption("👨‍💻 Created by Mehmethan SÖNMEZ")
+st.sidebar.caption("Mail:")
 st.sidebar.caption("Mehmethansonmez@gmail.com")
+st.sidebar.caption("LinkedIn:")
+st.sidebar.caption("https://www.linkedin.com/in/mehmethans%C3%B6nmez/")

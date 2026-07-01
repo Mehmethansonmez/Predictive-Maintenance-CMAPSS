@@ -210,7 +210,7 @@ else:
             with col_scada:
                 st.markdown("📠 **Otomasyon ve İş Emri (SCADA)**")
                 st.caption("PLC/ERP sistemleri için machine-readable paket.")
-                rapor_durumu = "ACIL_MRO_MUDAHALESI" if predicted_rul <= 30 else ("PLANLI_BAKIM_GEREKLI" if predicted_rul <= 90 else "NORMAL")
+                rapor_durumu = "ACIL_MRO_MUDAHALESI" if predicted_rul <= 30 else ("PLANLI_BAKIM_GEREKLI" if predicted_rul <= 75 else "NORMAL")
                 scada_verisi = {
                     "Cihaz_ID": "JET-ENG-TR-FD004",
                     "Tarih_Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

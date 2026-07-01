@@ -187,7 +187,7 @@ with tab_analiz:
                     feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
                     
                     fig, ax = plt.subplots(figsize=(3.8, 2.4))
-                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 2.5))
+                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 4.0))
                     st.pyplot(fig, clear_figure=True, bbox_inches='tight')
                     plt.close(fig)
 

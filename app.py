@@ -64,7 +64,7 @@ degradation = st.sidebar.slider("Motor İç Yıpranma Seviyesi", min_value=0.0, 
 temp_anomaly = st.sidebar.slider("Dış Hava Sıcaklık Anomalisi (°C)", min_value=-20.0, max_value=40.0, value=0.0, step=5.0)
 altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
 
-# --- Agresif / Standart Mod Switch (Toggle) ---
+# --- Agresif / Standart Mod Switch ---
 st.sidebar.markdown("**Uçuş Profili**")
 is_aggressive = st.sidebar.toggle("🚀 Agresif Uçuş Modu", value=False)
 flight_mode = "Agresif (Test/Askeri)" if is_aggressive else "Standart (Ticari Uçuş)"
@@ -78,23 +78,33 @@ with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=Fal
     bleed_leakage = st.slider("Pnömatik Sistem Kaçağı (Bleed)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 
 
-# --- YENİ NESİL SEKME SİSTEMİ (Gerçek Şalter Görevi Görür) ---
-st.markdown("""
-    <style>
-    div.row-widget.stRadio > div{flex-direction:row;}
-    </style>
-""", unsafe_allow_html=True)
+# --- YENİ NESİL SEKME SİSTEMİ (Gerçek Şalter Görevi Gören Butonlar) ---
+# Tıklanan butonu algılayıp sistemi o saniye resetliyoruz.
+if "aktif_sekme" not in st.session_state:
+    st.session_state.aktif_sekme = "telemetri"
 
-mod_secimi = st.radio(
-    "Görünüm Modu Seçimi", 
-    ["📡 Canlı Telemetri Akışı", "🔍 Derin Analiz (SHAP & SCADA)"], 
-    label_visibility="collapsed"
-)
+col_tab1, col_tab2 = st.columns(2)
+
+with col_tab1:
+    if st.button("📡 Canlı Telemetri Akışı", use_container_width=True, type="primary" if st.session_state.aktif_sekme == "telemetri" else "secondary"):
+        st.session_state.aktif_sekme = "telemetri"
+        plt.close('all')
+        st.rerun()
+
+with col_tab2:
+    if st.button("🔍 Derin Analiz (SHAP & SCADA)", use_container_width=True, type="primary" if st.session_state.aktif_sekme == "analiz" else "secondary"):
+        st.session_state.aktif_sekme = "analiz"
+        plt.close('all')
+        if 'rul_history' in st.session_state:
+            del st.session_state.rul_history
+        st.rerun()
+
+st.markdown("---")
 
 # ==========================================
 # 1. MOD: CANLI TELEMETRİ
 # ==========================================
-if mod_secimi == "📡 Canlı Telemetri Akışı":
+if st.session_state.aktif_sekme == "telemetri":
     if 'rul_history' not in st.session_state:
         st.session_state.rul_history = []
     
@@ -137,10 +147,6 @@ if mod_secimi == "📡 Canlı Telemetri Akışı":
 # 2. MOD: TEKİL ANALİZ (SHAP & SCADA)
 # ==========================================
 else:
-    # Telemetri sekmesinden kalma geçmişi ve grafikleri tamamen temizliyoruz
-    if 'rul_history' in st.session_state:
-        del st.session_state.rul_history
-
     st.markdown("### Uçuş Güvenliği ve Karar Mekanizması Analizi")
     if st.button("🚀 Sensör Durumunu Analiz Et", type="primary"):
         with st.spinner('Yapay Zeka FD004 Verilerini Yorumluyor...'):

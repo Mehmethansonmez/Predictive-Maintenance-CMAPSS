@@ -9,7 +9,7 @@ import time
 import json
 from datetime import datetime
 
-# Matplotlib'in hafızasında kalan eski "hayalet" grafikleri temizle
+# Matplotlib küresel hafızasını temizle
 plt.close('all')
 
 st.set_page_config(page_title="AI Öngörücü Bakım Kokpiti", page_icon="✈️", layout="wide")
@@ -77,9 +77,19 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("**📡 Telemetri ve Analiz Modları**")
 live_mode = st.sidebar.checkbox("🔴 Canlı Telemetri Akışını Başlat", value=False)
 
+# 🚨 EKRAN SIFIRLAMA MECHANISM (Açma ve kapama anında ekranı ve hafızayı tamamen uçurur)
+if 'prev_live_mode' not in st.session_state:
+    st.session_state.prev_live_mode = live_mode
+
+if live_mode != st.session_state.prev_live_mode:
+    st.session_state.prev_live_mode = live_mode
+    plt.close('all') # Çizilmiş tüm grafikleri yok et
+    if 'rul_history' in st.session_state:
+        del st.session_state.rul_history
+    st.rerun() # Sayfayı tertemiz baştan başlat
 
 # ==========================================
-# EVREN 1: CANLI TELEMETRİ (SHAP YOK)
+# EVREN 1: CANLI TELEMETRİ (SHAP YAZISI BİLE YOK)
 # ==========================================
 if live_mode:
     if 'rul_history' not in st.session_state:
@@ -117,7 +127,7 @@ if live_mode:
     chart_data = pd.DataFrame({"Anlık RUL Tahmini": st.session_state.rul_history})
     st.line_chart(chart_data, height=250, use_container_width=True)
     
-    # Bekleme süresi tam istediğin gibi 1.0 saniye
+    # Bekleme süresi tam 1.0 saniye
     time.sleep(1.0)
     st.rerun()
 
@@ -149,7 +159,7 @@ else:
             col3.metric("Basınç Sensörü (s_4)", f"% {int((altitude_stress * 2.5) + (degradation * 12) + (bypass_degradation * 8))}")
             
             if predicted_rul > 90:
-                st.success("✅ **SİSTEM SAĞLIKLI:** Uçuş parametreleri güvenli. Planlı bakım periyoduna devam edilebilir.")
+                st.success("✅ **SİSTEM SAĞLIKLI:** Uçuşampiyon parametreleri güvenli. Planlı bakım periyoduna devam edilebilir.")
             elif predicted_rul > 30:
                 st.warning("⚠️ **DİKKAT:** Çevresel faktörler ve alt sistem yıpranmaları aşınmayı hızlandırıyor. Bakım önerilir.")
             else:
@@ -192,10 +202,12 @@ else:
                     
                     feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
                     
-                    # Grafik boyutu zorlaması kaldırıldı, eski orijinal SHAP boyutuna dönüldü
-                    fig = plt.figure()
+                    # 📐 Görsel boyutu tam %40 daha küçültüldü (3.8 x 2.4 mini panele çekildi)
+                    fig, ax = plt.subplots(figsize=(3.8, 2.4))
                     shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False)
-                    st.pyplot(fig, bbox_inches='tight')
+                    
+                    # Küresel plot çakışmasını ve hayalet görüntüleri engellemek için clear_figure aktif edildi
+                    st.pyplot(fig, clear_figure=True, bbox_inches='tight')
                     plt.close(fig)
 
 st.sidebar.markdown("---")

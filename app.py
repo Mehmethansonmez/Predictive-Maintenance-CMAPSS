@@ -226,5 +226,7 @@ else:
                 st.json(scada_verisi)
                 st.download_button("📥 İş Emri (.json)", scada_json, f"SCADA_FD004_{datetime.now().strftime('%Y%m%d_%H%M')}.json", "application/json", use_container_width=True)
 
+
 st.sidebar.markdown("---")
 st.sidebar.caption("👨‍💻 Created by Mehmethan SÖNMEZ")
+st.sidebar.caption("Mehmethansonmez@gmail.com")

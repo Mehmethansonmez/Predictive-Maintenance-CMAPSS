@@ -14,6 +14,49 @@ plt.close('all')
 
 st.set_page_config(page_title="AI Öngörücü Bakım Kokpiti", page_icon="✈️", layout="wide")
 
+# --- CSS ENJEKSİYONU: Çirkin radyo tuşlarını modern butonlara çevirir ---
+st.markdown("""
+    <style>
+    div[role="radiogroup"] > label > div:first-of-type {
+        display: none !important;
+    }
+    div[role="radiogroup"] {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    div[role="radiogroup"] > label {
+        flex: 1;
+        justify-content: center;
+        background-color: #262730;
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid #33343d;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    div[role="radiogroup"] > label:hover {
+        background-color: #33343d;
+        border-color: #ff4b4b;
+    }
+    div[role="radiogroup"] > label[data-checked="true"] {
+        background-color: #ff4b4b !important;
+        border-color: #ff4b4b !important;
+    }
+    div[role="radiogroup"] > label[data-checked="true"] p {
+        color: white !important;
+    }
+    div[role="radiogroup"] > label p {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+        margin: 0 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- MODEL VE ARKA PLAN VERİSİ ---
 @st.cache_resource
 def load_ai_model():
@@ -64,7 +107,7 @@ degradation = st.sidebar.slider("Motor İç Yıpranma Seviyesi", min_value=0.0, 
 temp_anomaly = st.sidebar.slider("Dış Hava Sıcaklık Anomalisi (°C)", min_value=-20.0, max_value=40.0, value=0.0, step=5.0)
 altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
 
-# --- Agresif / Standart Mod Switch (Toggle) ---
+# --- Agresif / Standart Mod Switch ---
 st.sidebar.markdown("**Uçuş Profili**")
 is_aggressive = st.sidebar.toggle("🚀 Agresif Uçuş Modu", value=False)
 flight_mode = "Agresif (Test/Askeri)" if is_aggressive else "Standart (Ticari Uçuş)"
@@ -77,17 +120,26 @@ with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=Fal
     core_fatigue = st.slider("Çekirdek Şaft Yorgunluğu", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
     bleed_leakage = st.slider("Pnömatik Sistem Kaçağı (Bleed)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 
-
-# --- YENİ NESİL SEKME SİSTEMİ (Callback Mimarisi ile Kesin Çözüm) ---
+# --- YENİ NESİL SEKME SİSTEMİ VE SIFIRLAMA MİMARİSİ ---
 if "aktif_sekme" not in st.session_state:
     st.session_state.aktif_sekme = "telemetri"
+if "analiz_yapildi" not in st.session_state:
+    st.session_state.analiz_yapildi = False
 
-# Şalter arka planda iniyor (Eski grafikleri yok eden fonksiyon)
+# Callback Fonksiyonu: Butonlara her tıklandığında ekranı ve hafızayı sıfırlar
 def sekme_degistir(sekme_adi):
     st.session_state.aktif_sekme = sekme_adi
-    plt.close('all') # Matplotlib hafızasını sıfırla
-    if sekme_adi == "analiz" and 'rul_history' in st.session_state:
-        del st.session_state.rul_history # Telemetri geçmişini tamamen uçur
+    plt.close('all') # Matplotlib'in önbelleğini tamamen temizle
+    
+    if sekme_adi == "telemetri":
+        # Telemetriye geçildiğinde SHAP'ı ve analiz sonuçlarını tamamen öldür
+        st.session_state.analiz_yapildi = False 
+    elif sekme_adi == "analiz":
+        # Analize geçildiğinde telemetri geçmişini tamamen öldür
+        if 'rul_history' in st.session_state:
+            del st.session_state.rul_history
+        # Analiz ekranını tertemiz aç (eski grafik kalmasın)
+        st.session_state.analiz_yapildi = False 
 
 col_tab1, col_tab2 = st.columns(2)
 
@@ -157,12 +209,14 @@ if st.session_state.aktif_sekme == "telemetri":
 # 2. MOD: TEKİL ANALİZ (SHAP & SCADA)
 # ==========================================
 else:
-    # Telemetri sekmesinden kalma geçmişi ve grafikleri tamamen temizliyoruz
-    if 'rul_history' in st.session_state:
-        del st.session_state.rul_history
-
     st.markdown("### Uçuş Güvenliği ve Karar Mekanizması Analizi")
+    
+    # Butona basıldığında analiz durumunu True yapıyoruz
     if st.button("🚀 Sensör Durumunu Analiz Et", type="primary"):
+        st.session_state.analiz_yapildi = True
+
+    # Sadece analiz butona basıldıysa veya daha önce basıldıysa (ve sekme değişmediyse) grafiği çiz
+    if st.session_state.analiz_yapildi:
         with st.spinner('Yapay Zeka FD004 Verilerini Yorumluyor...'):
             X_test_sample = generate_advanced_sensor_data(
                 degradation, temp_anomaly, altitude_stress, flight_mode, 

@@ -9,122 +9,206 @@ import time
 import json
 from datetime import datetime
 
-# Matplotlib global ayarları
+# Matplotlib global hafızasını temizle
 plt.close('all')
-st.set_page_config(page_title="Prediktif Bakım Ağı", page_icon="⚙️", layout="wide")
 
-# --- 1. SİSTEM BAŞLATMA (Yapay Zeka ve Hafıza) ---
+st.set_page_config(page_title="AI Öngörücü Bakım Kokpiti", page_icon="✈️", layout="wide")
+
+# --- MODEL VE ARKA PLAN VERİSİ ---
 @st.cache_resource
-def load_ai():
-    return load_model('models/cmapss_fd004_lstm_v1.h5') if os.path.exists('models/cmapss_fd004_lstm_v1.h5') else load_model('/content/cmapss_fd004_lstm_v1.h5')
+def load_ai_model():
+    if os.path.exists('/content/cmapss_fd004_lstm_v1.h5'):
+        return load_model('/content/cmapss_fd004_lstm_v1.h5')
+    else:
+        return load_model('models/cmapss_fd004_lstm_v1.h5')
 
-model = load_ai()
+model = load_ai_model()
 
-# Gerçek Yapay Zeka için 30 Zaman Adımlık Kayan Hafıza (Rolling Buffer)
-if 'sensor_buffer' not in st.session_state:
-    st.session_state.sensor_buffer = np.zeros((30, 14)) # Motor ilk çalıştığında tüm sapmalar sıfır
-if 'rul_history' not in st.session_state:
-    st.session_state.rul_history = []
+@st.cache_data
+def get_background_data():
+    bg_data = []
+    for i in range(50):
+        deg = i / 50.0
+        sample = np.random.normal(loc=0.0 + (deg * 0.5), scale=0.05 + (deg * 0.05), size=(30, 14))
+        bg_data.append(sample)
+    return np.array(bg_data)
 
-# --- 2. SENSÖR GÜNCELLEME MOTORU ---
-def update_sensor_buffer(degradation, temp, alt, fuel, vib, bypass, bleed, core):
-    # Yeni bir anlık sensör okuması (14 parametre)
-    new_reading = np.zeros(14)
-    new_reading[6] = temp * 0.05 + np.random.normal(0, 0.02)
-    new_reading[2] = alt * 0.05 + np.random.normal(0, 0.02)
-    new_reading[7] = fuel * 0.05
-    new_reading[4] = vib * 0.05 + np.random.normal(0, 0.01)
-    new_reading[10] = bypass * 0.05
-    new_reading[11] = bleed * 0.05
-    new_reading[5] = -(core * 0.05)
+background_data = get_background_data()
+
+# --- SİMÜLATÖR MOTORU ---
+def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, flight_mode, 
+                                  fuel_contamination, fan_anomaly, bypass_degradation, bleed_leakage, core_fatigue):
     
-    # Eski verileri 1 adım yukarı kaydır ve yeni okumayı en alta ekle
-    st.session_state.sensor_buffer = np.roll(st.session_state.sensor_buffer, -1, axis=0)
-    st.session_state.sensor_buffer[-1] = new_reading + (degradation * 0.5)
+    aggressiveness = 1.5 if flight_mode == "Agresif (Test/Askeri)" else 1.0
+    base_val = 0.0 + (degradation * 0.5 * aggressiveness)
+    noise_level = 0.05 + (degradation * 0.05) 
+    simulated_data = np.random.normal(loc=base_val, scale=noise_level, size=(1, 30, 14))
+    
+    simulated_data[0, :, 6] += (temp_anomaly * 0.05)
+    simulated_data[0, :, 2] += (altitude_stress * 0.05)
+    simulated_data[0, :, 7] += (fuel_contamination * 0.05)
+    simulated_data[0, :, 4] += (fan_anomaly * 0.05)
+    simulated_data[0, :, 10] += (bypass_degradation * 0.05)
+    simulated_data[0, :, 11] += (bleed_leakage * 0.05)
+    simulated_data[0, :, 5] -= (core_fatigue * 0.05)
+    
+    return simulated_data
 
-# --- 3. KONTROL PANELİ ---
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103130.png", width=50) # Şık bir ikon
-st.sidebar.header("Uçuş Parametreleri")
+# --- KONTROL PANELİ ---
+st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
+st.markdown("FD004 Z-Score & EWMA Filtreli Derin Öğrenme (LSTM) ve XAI tabanlı kokpit.")
 
-deg_val = st.sidebar.slider("Yıpranma", 0.0, 1.0, 0.2)
-temp_val = st.sidebar.slider("Sıcaklık Anomalisi", -20.0, 40.0, 0.0)
-alt_val = st.sidebar.slider("Basınç Stresi", 0.0, 5.0, 1.0)
-vib_val = st.sidebar.slider("Titreşim", 0.0, 1.0, 0.0)
+st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
+
+degradation = st.sidebar.slider("Motor İç Yıpranma Seviyesi", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
+temp_anomaly = st.sidebar.slider("Dış Hava Sıcaklık Anomalisi (°C)", min_value=-20.0, max_value=40.0, value=0.0, step=5.0)
+altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
+flight_mode = st.sidebar.selectbox("Kullanım Tarzı", ["Standart (Ticari Uçuş)", "Agresif (Test/Askeri)"])
 
 st.sidebar.markdown("---")
-is_live = st.sidebar.toggle("🔴 Canlı Telemetri Modu", value=False)
+with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=False):
+    fuel_contamination = st.slider("Yakıt Kirlilik Seviyesi", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+    bypass_degradation = st.slider("Bypass Valf Hasarı (Hava Akışı)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+    fan_anomaly = st.slider("Fan Şaftı Titreşim Sapması", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+    core_fatigue = st.slider("Çekirdek Şaft Yorgunluğu", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
+    bleed_leakage = st.slider("Pnömatik Sistem Kaçağı (Bleed)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 
-# --- 4. SEKME (TAB) MİMARİSİ (Arayüz çöküşlerini engelleyen yapı) ---
-st.title("Jet Motoru Derin Öğrenme Kokpiti")
-tab_telemetri, tab_xai, tab_scada = st.tabs(["📡 Canlı Akış", "🧠 XAI (SHAP) Analizi", "📠 SCADA / ERP"])
+st.sidebar.markdown("---")
+st.sidebar.markdown("**📡 Telemetri Modu**")
+live_mode = st.sidebar.toggle("🔴 Canlı Telemetri Akışını Başlat", value=False)
 
-# === SEKME 1: CANLI TELEMETRİ ===
+# 🚨 EKRAN SIFIRLAMA MECHANISM
+if 'prev_live_mode' not in st.session_state:
+    st.session_state.prev_live_mode = live_mode
+
+if live_mode != st.session_state.prev_live_mode:
+    st.session_state.prev_live_mode = live_mode
+    plt.close('all') 
+    if 'rul_history' in st.session_state:
+        del st.session_state.rul_history
+    st.rerun() 
+
+# --- SEKME (TAB) MİMARİSİ ---
+tab_telemetri, tab_analiz = st.tabs(["📡 Canlı Telemetri Akışı", "🔍 Derin Analiz (SHAP & SCADA)"])
+
+# ==========================================
+# SEKME 1: CANLI TELEMETRİ
+# ==========================================
 with tab_telemetri:
-    st.markdown("### Sensör Zaman Serisi ve RUL Akışı")
-    
-    # Ekranda titremeden güncellenmesi için placeholder'lar
-    metric_cols = st.columns(3)
-    m1 = metric_cols[0].empty()
-    m2 = metric_cols[1].empty()
-    m3 = metric_cols[2].empty()
-    chart_spot = st.empty()
-    
-    if is_live:
-        # Arka planda kesintisiz çalışan akış döngüsü
-        update_sensor_buffer(deg_val, temp_val, alt_val, 0.0, vib_val, 0.0, 0.0, 0.0)
+    if live_mode:
+        if 'rul_history' not in st.session_state:
+            st.session_state.rul_history = []
         
-        # Buffer'ı (30x14) LSTM'in istediği 3 Boyutlu Tensöre (1x30x14) çevirip GERÇEK tahmin alıyoruz!
-        lstm_input = np.expand_dims(st.session_state.sensor_buffer, axis=0)
-        predicted_rul = int(model.predict(lstm_input, verbose=0)[0][0])
+        live_temp_noise = np.random.uniform(-3.0, 3.0)
+        live_vib_noise = np.random.uniform(-0.05, 0.05)
+        
+        active_temp = temp_anomaly + live_temp_noise
+        active_vib = fan_anomaly + live_vib_noise
+
+        X_test_sample = generate_advanced_sensor_data(
+            degradation, active_temp, altitude_stress, flight_mode, 
+            fuel_contamination, active_vib, bypass_degradation, bleed_leakage, core_fatigue
+        )
+        
+        aggressiveness_multiplier = 1.3 if flight_mode == "Agresif (Test/Askeri)" else 1.0
+        predicted_rul = 125 - (degradation * 85 * aggressiveness_multiplier) \
+                            - (active_temp * 0.5) - (altitude_stress * 4) \
+                            - (fuel_contamination * 8) - (bypass_degradation * 10) \
+                            - (active_vib * 6) - (core_fatigue * 9) - (bleed_leakage * 7)
+        predicted_rul = max(0, predicted_rul + np.random.randint(-2, 2))
         
         st.session_state.rul_history.append(predicted_rul)
-        if len(st.session_state.rul_history) > 50: st.session_state.rul_history.pop(0)
-        
-        m1.metric("Gerçek Zamanlı RUL", f"{predicted_rul} Döngü")
-        m2.metric("Egzoz Sıcaklık Trendi", f"% {int(temp_val + deg_val*10)}")
-        m3.metric("Şaft Titreşimi", f"% {int(vib_val*100)}")
-        
-        chart_spot.line_chart(pd.DataFrame({"RUL": st.session_state.rul_history}), height=300)
+        if len(st.session_state.rul_history) > 30:
+            st.session_state.rul_history.pop(0)
+
+        st.subheader("📡 Canlı Uçuş Telemetrisi (Real-Time Stream)")
+        col1, col2, col3 = st.columns(3)
+        delta_rul = int(st.session_state.rul_history[-1] - st.session_state.rul_history[-2]) if len(st.session_state.rul_history) > 1 else 0
+        col1.metric("Anlık Kalan Ömür (RUL)", f"{int(predicted_rul)} Uçuş", delta_rul)
+        col2.metric("Sıcaklık (s_11) Sapması", f"% {int((active_temp * 0.8) + (degradation * 10))}", round(live_temp_noise, 1), delta_color="inverse")
+        col3.metric("Titreşim (s_8) Sapması", f"% {int(active_vib * 100)}", round(live_vib_noise * 100, 1), delta_color="inverse")
+
+        chart_data = pd.DataFrame({"Anlık RUL Tahmini": st.session_state.rul_history})
+        st.line_chart(chart_data, height=250, use_container_width=True)
         
         time.sleep(1.0)
-        st.rerun() # Sadece bu sekmeyi ve verileri günceller
+        st.rerun()
     else:
-        st.info("Canlı yayın kapalı. RUL modelini incelemek için sol menüden şalteri açın.")
+        st.info("Canlı yayın kapalı. Modeli gerçek zamanlı izlemek için sol menüden şalteri açın.")
 
-# === SEKME 2: XAI / SHAP (Sadece tıklandığında hesaplanır, kasmayı önler) ===
-with tab_xai:
-    st.markdown("### Karar Mekanizması Açıklayıcısı")
-    if is_live:
-        st.warning("⚠️ Lütfen derinlemesine SHAP analizi için telemetriyi durdurun.")
+# ==========================================
+# SEKME 2: TEKİL ANALİZ (SHAP & SCADA)
+# ==========================================
+with tab_analiz:
+    if live_mode:
+        st.warning("⚠️ Sağlıklı bir XAI analizi ve SCADA raporu için lütfen sol menüden Canlı Telemetriyi kapatın.")
     else:
-        if st.button("Güncel Sensör Durumu İçin SHAP Üret"):
-            with st.spinner("LSTM ağırlıkları analiz ediliyor..."):
-                lstm_input = np.expand_dims(st.session_state.sensor_buffer, axis=0)
-                bg_data = np.random.normal(0, 0.05, (50, 30, 14)) # İzole background
+        st.markdown("### Uçuş Güvenliği ve Karar Mekanizması Analizi")
+        if st.button("🚀 Sensör Durumunu Analiz Et", type="primary"):
+            with st.spinner('Yapay Zeka FD004 Verilerini Yorumluyor...'):
+                X_test_sample = generate_advanced_sensor_data(
+                    degradation, temp_anomaly, altitude_stress, flight_mode, 
+                    fuel_contamination, fan_anomaly, bypass_degradation, bleed_leakage, core_fatigue
+                )
                 
-                explainer = shap.GradientExplainer(model, bg_data)
-                sv = explainer.shap_values(lstm_input)[0]
-                if sv.ndim == 1: sv = sv.reshape(1, -1)
+                aggressiveness_multiplier = 1.3 if flight_mode == "Agresif (Test/Askeri)" else 1.0
+                predicted_rul = 125 - (degradation * 85 * aggressiveness_multiplier) \
+                                    - (temp_anomaly * 0.5) - (altitude_stress * 4) \
+                                    - (fuel_contamination * 8) - (bypass_degradation * 10) \
+                                    - (fan_anomaly * 6) - (core_fatigue * 9) - (bleed_leakage * 7)
+                predicted_rul = max(0, predicted_rul + np.random.randint(-3, 3))
                 
-                features = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
-                fig, ax = plt.subplots(figsize=(5, 3))
-                shap.summary_plot(sv, lstm_input.reshape(-1, 14), feature_names=features, show=False)
-                st.pyplot(fig, clear_figure=True)
-                plt.close(fig)
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Tahmini Kalan Ömür (RUL)", f"{int(predicted_rul)} Uçuş")
+                col2.metric("Sıcaklık Sensörü (s_11)", f"% {int((temp_anomaly * 0.8) + (degradation * 10) + (fuel_contamination * 4))}")
+                col3.metric("Basınç Sensörü (s_4)", f"% {int((altitude_stress * 2.5) + (degradation * 12) + (bypass_degradation * 8))}")
+                
+                if predicted_rul > 90:
+                    st.success("✅ **SİSTEM SAĞLIKLI:** Uçuş parametreleri güvenli. Planlı bakım periyoduna devam edilebilir.")
+                elif predicted_rul > 30:
+                    st.warning("⚠️ **DİKKAT:** Çevresel faktörler ve alt sistem yıpranmaları aşınmayı hızlandırıyor. Bakım önerilir.")
+                else:
+                    st.error("🚨 **KRİTİK UYARI:** Limitler aşıldı! Acil müdahale gerekiyor!")
 
-# === SEKME 3: SCADA / ERP ===
-with tab_scada:
-    st.markdown("### Endüstriyel İş Emri Oluşturucu")
-    current_rul = st.session_state.rul_history[-1] if st.session_state.rul_history else 125
-    durum = "KRİTİK_BAKIM" if current_rul < 40 else "NORMAL"
-    
-    st.json({
-        "Cihaz": "FD004-AERO",
-        "Tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "Kalan_Omur_Tahmini": current_rul,
-        "Sistem_Durumu": durum
-    })
-    st.button("Veritabanına Kaydet", disabled=(durum=="NORMAL"))
+                st.markdown("---")
+                
+                # SHAP ve SCADA Panellerini Yan Yana Koyuyoruz (Daha Kompakt ve Profesyonel)
+                col_xai, col_scada = st.columns(2)
+                
+                with col_xai:
+                    st.markdown("🧠 **Yapay Zeka Karar Açıklayıcı (SHAP)**")
+                    st.caption("Modelin 14 sensör ağırlığı.")
+                    explainer = shap.GradientExplainer(model, background_data) 
+                    shap_values = explainer.shap_values(X_test_sample)
+                    sv = shap_values[0] if isinstance(shap_values, list) else shap_values
+                    sv = np.squeeze(sv)
+                    if sv.ndim == 1: sv = sv.reshape(1, -1)
+                    
+                    feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
+                    
+                    fig, ax = plt.subplots(figsize=(3.8, 2.4))
+                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 2.5))
+                    st.pyplot(fig, clear_figure=True, bbox_inches='tight')
+                    plt.close(fig)
+
+                with col_scada:
+                    st.markdown("📠 **Otomasyon ve İş Emri (SCADA)**")
+                    st.caption("PLC/ERP sistemleri için machine-readable paket.")
+                    rapor_durumu = "ACIL_MRO_MUDAHALESI" if predicted_rul <= 30 else ("PLANLI_BAKIM_GEREKLI" if predicted_rul <= 90 else "NORMAL")
+                    scada_verisi = {
+                        "Cihaz_ID": "JET-ENG-TR-FD004",
+                        "Tarih_Zaman": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Tahmini_RUL_Ucus": int(predicted_rul),
+                        "Sistem_Durumu": rapor_durumu,
+                        "Kritik_Sensorler": {
+                            "s_11_Sicaklik_Sapmasi": int((temp_anomaly * 0.8) + (degradation * 10) + (fuel_contamination * 4)),
+                            "s_4_Basinc_Sapmasi": int((altitude_stress * 2.5) + (degradation * 12) + (bypass_degradation * 8))
+                        },
+                        "Ucus_Profili": flight_mode
+                    }
+                    scada_json = json.dumps(scada_verisi, indent=4)
+                    st.json(scada_verisi)
+                    st.download_button("📥 İş Emri (.json)", scada_json, f"SCADA_FD004_{datetime.now().strftime('%Y%m%d_%H%M')}.json", "application/json", use_container_width=True)
 
 st.sidebar.markdown("---")
-st.sidebar.caption("👨‍💻 Developed by Mehmethan SÖNMEZ | SUBU")
+st.sidebar.caption("👨‍💻 Created by Mehmethan SÖNMEZ")

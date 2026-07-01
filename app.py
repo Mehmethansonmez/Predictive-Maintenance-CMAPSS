@@ -136,19 +136,19 @@ if st.session_state.aktif_sekme == "telemetri":
     col3.metric("Titreşim (s_8) Sapması", f"% {int(active_vib * 100)}", round(live_vib_noise * 100, 1), delta_color="inverse")
 
     # RUL geçmişinin yanına 75 ve 30 değerlerinde sabit düz çizgiler ekliyoruz
-        chart_data = pd.DataFrame({
-            "Anlık RUL Tahmini": st.session_state.rul_history,
-            "Sarı Uyarı Sınırı (75)": [75] * len(st.session_state.rul_history),
-            "Kırmızı Kritik Sınır (30)": [30] * len(st.session_state.rul_history)
-        })
+    chart_data = pd.DataFrame({
+        "Anlık RUL Tahmini": st.session_state.rul_history,
+        "Sarı Uyarı Sınırı (75)": [75] * len(st.session_state.rul_history),
+        "Kırmızı Kritik Sınır (30)": [30] * len(st.session_state.rul_history)
+    })
         
-        # Renk sırası: [Ana Grafik (Mavi), Sarı Çizgi, Kırmızı Çizgi]
-        st.line_chart(
-            chart_data, 
-            height=250, 
-            use_container_width=True, 
-            color=["#2E9BF5", "#FFC107", "#FF2B2B"]
-        )
+    # Renk sırası: [Ana Grafik (Mavi), Sarı Çizgi, Kırmızı Çizgi]
+    st.line_chart(
+         chart_data, 
+         height=250, 
+         use_container_width=True, 
+         color=["#2E9BF5", "#FFC107", "#FF2B2B"]
+    )
     
     time.sleep(1.0)
     st.rerun()

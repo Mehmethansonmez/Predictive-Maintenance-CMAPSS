@@ -35,6 +35,8 @@ Sistem, gürültü eleme aşamasından geçen **14 kritik termodinamik ve fiziks
 * **Otomasyon:** `JSON-based SCADA Integration`
 
 ## 🚀 Kurulum ve Kullanım
+Projeyi kendi lokal ortamınızda (bilgisayarınızda) çalıştırmak isterseniz aşağıdaki komutları tek seferde kopyalayıp terminalinize yapıştırabilirsiniz:
+
 NOT: KURULUM YAPMADAN DOĞRUDAN KULLANMAK İSTERSENİZ SAYFADA BULUNAN LİNK ÜZERİNDEN DE ERİŞEBİLİRSİNİZ.
 ```bash
 # 1. Repoyu Klonlayın

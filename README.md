@@ -2,7 +2,7 @@
 
 # ✈️ Jet Engine Predictive Maintenance & XAI (SHAP) Dashboard
 
-**Derin Öğrenme (LSTM) ve Açıklanabilir Yapay Zeka (XAI) tabanlı Kestirimci Bakım Simülatörü**
+**Derin Öğrenme (LSTM) ve Açıklanabilir Yapay Zeka (XAI) tabanlı Endüstriyel Kestirimci Bakım Simülatörü**
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15.0-orange.svg)](https://www.tensorflow.org/)
@@ -14,39 +14,36 @@
 ---
 
 ## 📋 Proje Özeti (Overview)
-Bu proje, turbofan jet motorlarının sensör verilerini analiz ederek **Kalan Kullanım Ömrünü (RUL - Remaining Useful Life)** tahmin eden gelişmiş bir makine öğrenmesi sistemidir. 
+Bu proje, **NASA CMAPSS (FD004)** veri seti üzerinde eğitilmiş, jet motorlarının Kalan Kullanım Ömrünü (RUL) tahmin eden uçtan uca bir kestirimci bakım sistemidir. 6 farklı uçuş rejimi ve hibrit arıza modlarını (kompresör + fan) içeren "Zor Mod" (FD004) verileriyle eğitilmiştir.
 
-Sistem, geleneksel "kara kutu" (black box) yapay zeka modellerinin aksine **SHAP** entegrasyonu sayesinde verdiği kararları şeffaflıkla açıklar. Geliştirilen Streamlit web arayüzü sayesinde kullanıcılar; çevresel faktörleri ve uçuş profillerini manipüle ederek modelin tepkilerini canlı olarak test edebilirler.
+Sistem, **SHAP** entegrasyonu sayesinde "kara kutu" yapay zeka kararlarını şeffaflaştırır ve kritik durumlarda **SCADA/ERP sistemlerine** makine-okunabilir JSON formatında bakım iş emri üreterek MRO süreçlerine entegre olur.
 
 ## ✨ Temel Özellikler (Key Features)
-* **Zaman Serisi Analizi:** Motorun son 30 uçuş döngüsündeki 18 farklı sensör verisini işleyen LSTM (Long Short-Term Memory) mimarisi.
-* **Canlı Uçuş Simülatörü:** Dış hava sıcaklığı, irtifa stresi ve uçuş agresifliği gibi çevresel faktörlerin anlık olarak RUL üzerindeki etkisinin simülasyonu.
-* **Şeffaf Yapay Zeka (XAI):** Arıza tahminlerinin hangi sensör anormalliklerinden kaynaklandığını gösteren dinamik SHAP grafikleri.
-* **Bulut Entegrasyonu:** Herhangi bir kurulum gerektirmeden 7/24 erişilebilir bulut tabanlı (Streamlit Cloud) web uygulaması.
+* **Derin Öğrenme Mimarisi:** Gürültüden arındırılmış (EWMA + Z-Score Normalization) verilerle eğitilmiş Çift Katmanlı **LSTM** ağı.
+* **Canlı Telemetri Simülatörü:** Uçuş profili ve çevresel stres faktörlerinin (sıcaklık/basınç) RUL üzerindeki anlık etkisini görselleştirme.
+* **Şeffaf Yapay Zeka (XAI):** Tahminlerin temelindeki 14 kritik sensör anormalliğini vurgulayan dinamik SHAP Karar Mekanizması.
+* **Endüstriyel Entegrasyon (SCADA):** Kritik RUL eşiklerinde, bakım ekipleri için PLC/ERP sistemlerine uygun .json iş emri üretme özelliği.
 
-## 🗂️ Veri Seti ve Sensörler (Dataset)
-Sistem, motorun anlık durumunu belirlemek için aşağıdaki kritik parametreleri (ve 18 sensör değerini) kullanmaktadır:
-* **s_11 (Sıcaklık Sensörü):** Motor içi termodinamik aşınma göstergesi.
-* **s_4 (Basınç Sensörü):** İrtifa ve basınç stres göstergesi.
-* **time_in_cycles:** Motorun tamamladığı operasyonel uçuş döngüsü.
-* *Not: Tahminler, geçmiş uçuş döngülerinin 3B matrisleri (30x18) üzerinden yapılmaktadır.*
+## 🗂️ Veri Seti ve Sensörler
+Sistem, gürültü eleme aşamasından geçen **14 kritik termodinamik ve fiziksel sensörü** (s_2, s_3, s_4, s_7, s_8, s_9, s_11, s_12, s_13, s_14, s_15, s_17, s_20, s_21) kullanmaktadır.
+* **Rejim Normalizasyonu:** K-Means algoritması ile 6 farklı uçuş rejimi kümelenmiş, modelin irtifa gürültüsünden etkilenmemesi sağlanmıştır.
 
-## 🛠️ Kullanılan Teknolojiler (Technologies Used)
-* **Yapay Zeka:** `TensorFlow`, `Keras` (LSTM)
-* **XAI (Açıklanabilirlik):** `SHAP`
-* **Veri Analizi:** `NumPy`, `Pandas`
-* **Görselleştirme & Web Arayüzü:** `Streamlit`, `Matplotlib`
+## 🛠️ Kullanılan Teknolojiler
+* **Yapay Zeka:** `TensorFlow/Keras (LSTM)`, `scikit-learn (K-Means)`
+* **Açıklanabilirlik:** `SHAP` (GradientExplainer)
+* **Web & Arayüz:** `Streamlit`, `Matplotlib`, `Pandas`
+* **Otomasyon:** `JSON-based SCADA Integration`
 
-## 🚀 Kurulum ve Kullanım (Installation & Setup)
+## 🚀 Kurulum ve Kullanım
 Projeyi kendi lokal ortamınızda (bilgisayarınızda) çalıştırmak isterseniz aşağıdaki komutları tek seferde kopyalayıp terminalinize yapıştırabilirsiniz:
 
 NOT: KURULUM YAPMADAN DOĞRUDAN KULLANMAK İSTERSENİZ SAYFADA BULUNAN LİNK ÜZERİNDEN DE ERİŞEBİLİRSİNİZ.
 ```bash
-# 1. Repoyu Klonlayın ve Klasöre Girin
+# 1. Repoyu Klonlayın
 git clone [https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git](https://github.com/Mehmethansonmez/Predictive-Maintenance-CMAPSS.git)
 cd Predictive-Maintenance-CMAPSS
 
-# 2. Gerekli Kütüphaneleri Yükleyin (Python 3.11 önerilir)
+# 2. Gereksinimleri Yükleyin
 pip install -r requirements.txt
 
 # 3. Uygulamayı Başlatın

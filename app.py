@@ -135,8 +135,20 @@ if st.session_state.aktif_sekme == "telemetri":
     col2.metric("Sıcaklık (s_11) Sapması", f"% {int((active_temp * 0.8) + (degradation * 10))}", round(live_temp_noise, 1), delta_color="inverse")
     col3.metric("Titreşim (s_8) Sapması", f"% {int(active_vib * 100)}", round(live_vib_noise * 100, 1), delta_color="inverse")
 
-    chart_data = pd.DataFrame({"Anlık RUL Tahmini": st.session_state.rul_history})
-    st.line_chart(chart_data, height=250, use_container_width=True)
+    # RUL geçmişinin yanına 75 ve 30 değerlerinde sabit düz çizgiler ekliyoruz
+        chart_data = pd.DataFrame({
+            "Anlık RUL Tahmini": st.session_state.rul_history,
+            "Sarı Uyarı Sınırı (75)": [75] * len(st.session_state.rul_history),
+            "Kırmızı Kritik Sınır (30)": [30] * len(st.session_state.rul_history)
+        })
+        
+        # Renk sırası: [Ana Grafik (Mavi), Sarı Çizgi, Kırmızı Çizgi]
+        st.line_chart(
+            chart_data, 
+            height=250, 
+            use_container_width=True, 
+            color=["#2E9BF5", "#FFC107", "#FF2B2B"]
+        )
     
     time.sleep(1.0)
     st.rerun()
@@ -165,7 +177,7 @@ else:
             col2.metric("Sıcaklık Sensörü (s_11)", f"% {int((temp_anomaly * 0.8) + (degradation * 10) + (fuel_contamination * 4))}")
             col3.metric("Basınç Sensörü (s_4)", f"% {int((altitude_stress * 2.5) + (degradation * 12) + (bypass_degradation * 8))}")
             
-            if predicted_rul > 90:
+            if predicted_rul > 75:
                 st.success("✅ **SİSTEM SAĞLIKLI:** Uçuş parametreleri güvenli. Planlı bakım periyoduna devam edilebilir.")
             elif predicted_rul > 30:
                 st.warning("⚠️ **DİKKAT:** Çevresel faktörler ve alt sistem yıpranmaları aşınmayı hızlandırıyor. Bakım önerilir.")

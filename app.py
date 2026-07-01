@@ -145,7 +145,7 @@ if st.session_state.aktif_sekme == "telemetri":
     # Renk sırası: [Ana Grafik (Mavi), Sarı Çizgi, Kırmızı Çizgi]
     st.line_chart(
          chart_data, 
-         height=250, 
+         height=350, 
          use_container_width=True, 
          color=["#2E9BF5", "#FFC107", "#FF2B2B"]
     )

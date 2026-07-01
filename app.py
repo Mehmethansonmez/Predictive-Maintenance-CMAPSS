@@ -63,7 +63,11 @@ st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
 degradation = st.sidebar.slider("Motor İç Yıpranma Seviyesi", min_value=0.0, max_value=1.0, value=0.2, step=0.05)
 temp_anomaly = st.sidebar.slider("Dış Hava Sıcaklık Anomalisi (°C)", min_value=-20.0, max_value=40.0, value=0.0, step=5.0)
 altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
-flight_mode = st.sidebar.selectbox("Kullanım Tarzı", ["Standart (Ticari Uçuş)", "Agresif (Test/Askeri)"])
+
+# --- Agresif / Standart Mod Switch (Toggle) ---
+st.sidebar.markdown("**Uçuş Profili**")
+is_aggressive = st.sidebar.toggle("🚀 Agresif Uçuş Modu", value=False)
+flight_mode = "Agresif (Test/Askeri)" if is_aggressive else "Standart (Ticari Uçuş)"
 
 st.sidebar.markdown("---")
 with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=False):
@@ -172,7 +176,6 @@ with tab_analiz:
 
                 st.markdown("---")
                 
-                # SHAP ve SCADA Panellerini Yan Yana Koyuyoruz (Daha Kompakt ve Profesyonel)
                 col_xai, col_scada = st.columns(2)
                 
                 with col_xai:
@@ -186,8 +189,11 @@ with tab_analiz:
                     
                     feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
                     
+                    # Grafikteki s_4, s_11 gibi fontların ve eksenlerin boyutunu küçültüyoruz
+                    plt.rcParams.update({'font.size': 7, 'axes.labelsize': 7, 'xtick.labelsize': 7, 'ytick.labelsize': 7})
+                    
                     fig, ax = plt.subplots(figsize=(3.8, 2.4))
-                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 3.0))
+                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 2.5))
                     st.pyplot(fig, clear_figure=True, bbox_inches='tight')
                     plt.close(fig)
 

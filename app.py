@@ -205,7 +205,7 @@ else:
                     col_left, col_mid, col_right = st.columns([1, 2, 1])
                     with col_mid:
                         # SHAP'ın kendi içindeki boyutu zorla küçültüldü
-                        shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 2.5))
+                        shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.8, 3.0))
                         fig = plt.gcf()
                         # use_container_width kaldırıldı, orijinal boyutuyla basılıyor
                         st.pyplot(fig, clear_figure=True) 

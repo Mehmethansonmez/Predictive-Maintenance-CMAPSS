@@ -78,26 +78,36 @@ with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=Fal
     bleed_leakage = st.slider("Pnömatik Sistem Kaçağı (Bleed)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 
 
-# --- YENİ NESİL SEKME SİSTEMİ (Gerçek Şalter Görevi Gören Butonlar) ---
-# Tıklanan butonu algılayıp sistemi o saniye resetliyoruz.
+# --- YENİ NESİL SEKME SİSTEMİ (Callback Mimarisi ile Kesin Çözüm) ---
 if "aktif_sekme" not in st.session_state:
     st.session_state.aktif_sekme = "telemetri"
+
+# Şalter arka planda iniyor (Eski grafikleri yok eden fonksiyon)
+def sekme_degistir(sekme_adi):
+    st.session_state.aktif_sekme = sekme_adi
+    plt.close('all') # Matplotlib hafızasını sıfırla
+    if sekme_adi == "analiz" and 'rul_history' in st.session_state:
+        del st.session_state.rul_history # Telemetri geçmişini tamamen uçur
 
 col_tab1, col_tab2 = st.columns(2)
 
 with col_tab1:
-    if st.button("📡 Canlı Telemetri Akışı", use_container_width=True, type="primary" if st.session_state.aktif_sekme == "telemetri" else "secondary"):
-        st.session_state.aktif_sekme = "telemetri"
-        plt.close('all')
-        st.rerun()
+    st.button(
+        "📡 Canlı Telemetri Akışı", 
+        use_container_width=True, 
+        type="primary" if st.session_state.aktif_sekme == "telemetri" else "secondary",
+        on_click=sekme_degistir, 
+        args=("telemetri",)
+    )
 
 with col_tab2:
-    if st.button("🔍 Derin Analiz (SHAP & SCADA)", use_container_width=True, type="primary" if st.session_state.aktif_sekme == "analiz" else "secondary"):
-        st.session_state.aktif_sekme = "analiz"
-        plt.close('all')
-        if 'rul_history' in st.session_state:
-            del st.session_state.rul_history
-        st.rerun()
+    st.button(
+        "🔍 Derin Analiz (SHAP & SCADA)", 
+        use_container_width=True, 
+        type="primary" if st.session_state.aktif_sekme == "analiz" else "secondary",
+        on_click=sekme_degistir, 
+        args=("analiz",)
+    )
 
 st.markdown("---")
 

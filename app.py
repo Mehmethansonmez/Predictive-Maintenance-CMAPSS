@@ -231,19 +231,12 @@ else:
                 )
             
             st.markdown("---")
-            
-            # (Yukarıda SCADA JSON indirme kodları vs. var)
+            if not live_mode:
 
-        st.markdown("---")
-        
-        # SADECE CANLI TELEMETRİ KAPALIYSA SHAP GÖSTERİLSİN:
-        if not live_mode:
-            with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
-                st.caption("Aşağıdaki grafik, modelin RUL tahminini yaparken hangi sensörlerden etkilendiğini açıklar.")
+	            with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
+        	        st.caption("Aşağıdaki grafik, modelin RUL tahminini yaparken hangi sensörlerden etkilendiğini açıklar.")
                 
-                with st.spinner('Matris grafiği çiziliyor...'):
-                    # SHAP hesaplama kodları (explainer, shap_values vb.) aynen kalıyor
-                    # (Buradaki kodların hepsini bir Tab içeri almayı unutma)
+               		 with st.spinner('Matris grafiği çiziliyor...'):
                     explainer = shap.GradientExplainer(model, background_data) 
                     shap_values = explainer.shap_values(X_test_sample)
                     

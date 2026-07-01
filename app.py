@@ -57,7 +57,7 @@ def generate_advanced_sensor_data(degradation, temp_anomaly, altitude_stress, fl
 
 # --- ARAYÜZ TASARIMI ---
 st.title("🛠️ Jet Motoru Öngörücü Bakım Sistemi")
-st.markdown("FD004 Z-Score & EWMA Filtreli Derin Öğrenme (LSTM) ve SHAP tabanlı kokpit.")
+st.markdown("FD004 Z-Score & EWMA Filtreli Derin Öğrenme (LSTM) ve XAI tabanlı kokpit.")
 
 st.sidebar.header("⚙️ Operasyonel Kontrol Paneli")
 
@@ -132,8 +132,6 @@ if live_mode:
     st.markdown("📈 **RUL (Kalan Ömür) Stabilite Grafiği**")
     chart_data = pd.DataFrame({"Anlık RUL Tahmini": st.session_state.rul_history})
     st.line_chart(chart_data, height=250, use_container_width=True)
-    
-    st.info("💡 **Bilgi:** Canlı telemetri modundayken SHAP XAI grafiği sistem performansını korumak için gizlenir. İncelemek için canlı yayını durdurup 'Tekil Analiz' butonunu kullanın.")
 
     time.sleep(1.0)
     st.rerun()
@@ -177,7 +175,7 @@ else:
             elif predicted_rul > 30:
                 st.warning("⚠️ **DİKKAT:** Çevresel faktörler ve alt sistem yıpranmaları aşınmayı hızlandırıyor. Bakım önerilir.")
             else:
-                st.error("🚨 **KRİTİK UYARI:** Limitler aşıldı! Acil öngörücü bakım (MRO) müdahalesi gerekiyor!")
+                st.error("🚨 **KRİTİK UYARI:** Limitler aşıldı! Acil müdahale gerekiyor!")
 
             st.markdown("---")
             
@@ -216,28 +214,26 @@ else:
             st.markdown("---")
             
             # --- SHAP BÖLÜMÜ ---
-	    # Telemetri KAPALIYSA (not live_mode) çalıştır:
-	    if not live_mode:
-		with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
-		    st.caption("Aşağıdaki grafik, modelin FD004 RUL tahminini yaparken hangi 14 sensörden etkilendiğini açıklar.")
-        
-        	    with st.spinner('Matris grafiği çiziliyor...'):
-            		explainer = shap.GradientExplainer(model, background_data) 
-            		shap_values = explainer.shap_values(X_test_sample)
-            
-            		sv = shap_values[0] if isinstance(shap_values, list) else shap_values
-            		sv = np.squeeze(sv)
-            		if sv.ndim == 1:
-             	       	    sv = sv.reshape(1, -1)
-                
-            		# Yeni FD004 14'lü Sensör İsimleri
-            		feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
-            
-           		col_space1, col_graph, col_space2 = st.columns([1, 2, 1])
-            		with col_graph:
-               		    fig, ax = plt.subplots(figsize=(6, 4))
-                	    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(6,4))
-                	    st.pyplot(fig, use_container_width=True)
+            if not live_mode:
+                with st.expander("🧠 XAI: Model Karar Mekanizmasını İncele (SHAP Görseli)", expanded=False):
+                    st.caption("Aşağıdaki grafik, modelin FD004 RUL tahminini yaparken hangi 14 sensörden etkilendiğini açıklar.")
+                    
+                    with st.spinner('Matris grafiği çiziliyor...'):
+                        explainer = shap.GradientExplainer(model, background_data) 
+                        shap_values = explainer.shap_values(X_test_sample)
+                        
+                        sv = shap_values[0] if isinstance(shap_values, list) else shap_values
+                        sv = np.squeeze(sv)
+                        if sv.ndim == 1:
+                            sv = sv.reshape(1, -1)
+                            
+                        feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
+                        
+                        col_space1, col_graph, col_space2 = st.columns([1, 2, 1])
+                        with col_graph:
+                            fig, ax = plt.subplots(figsize=(6, 4))
+                            shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(6,4))
+                            st.pyplot(fig, use_container_width=True)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("👨‍💻 Created by Mehmethan SÖNMEZ")

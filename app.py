@@ -69,7 +69,7 @@ st.sidebar.markdown("**Uçuş Profili**")
 is_aggressive = st.sidebar.toggle("🚀 Agresif Uçuş Modu", value=False)
 flight_mode = "Agresif (Test/Askeri)" if is_aggressive else "Standart (Ticari Uçuş)"
 
-st.sidebar.markdown("---")
+st.sidebar.markdown("-")
 with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=False):
     fuel_contamination = st.slider("Yakıt Kirlilik Seviyesi", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
     bypass_degradation = st.slider("Bypass Valf Hasarı (Hava Akışı)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
@@ -77,7 +77,7 @@ with st.sidebar.expander("🛠️ Gelişmiş Alt Sistem Ayarları", expanded=Fal
     core_fatigue = st.slider("Çekirdek Şaft Yorgunluğu", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
     bleed_leakage = st.slider("Pnömatik Sistem Kaçağı (Bleed)", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 
-st.sidebar.markdown("---")
+st.sidebar.markdown("-")
 st.sidebar.markdown("**📡 Telemetri Modu**")
 live_mode = st.sidebar.toggle("🔴 Canlı Telemetri Akışını Başlat", value=False)
 
@@ -193,7 +193,7 @@ with tab_analiz:
                     plt.rcParams.update({'font.size': 7, 'axes.labelsize': 7, 'xtick.labelsize': 7, 'ytick.labelsize': 7})
                     
                     fig, ax = plt.subplots(figsize=(3.8, 2.4))
-                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 2.5))
+                    shap.summary_plot(sv, X_test_sample.reshape(-1, X_test_sample.shape[-1]), feature_names=feature_names, show=False, plot_size=(4.0, 3.0))
                     st.pyplot(fig, clear_figure=True, bbox_inches='tight')
                     plt.close(fig)
 

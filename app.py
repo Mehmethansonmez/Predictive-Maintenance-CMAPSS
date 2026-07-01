@@ -25,9 +25,10 @@ def get_background_data():
     bg_data = []
     for i in range(50):
         deg = i / 50.0
-        sample = np.random.normal(loc=0.2 + (deg * 0.6), scale=0.02 + (deg * 0.08), size=(30, 18))
+        # Yeni model 14 sensörlü ve Z-Score normalize olduğu için taban değer sıfır etrafındadır
+        sample = np.random.normal(loc=0.0 + (deg * 0.5), scale=0.05 + (deg * 0.05), size=(30, 14))
         bg_data.append(sample)
-    return np.clip(np.array(bg_data), 0, 1)
+    return np.array(bg_data) # Z-score eksilere düşebileceği için kısıtlamayı kaldırdık
 
 background_data = get_background_data()
 
@@ -243,7 +244,7 @@ else:
                     if sv.ndim == 1:
                         sv = sv.reshape(1, -1)
                         
-                    feature_names = [f"s_{i}" for i in range(1, 19)]
+                    feature_names = ['s_2', 's_3', 's_4', 's_7', 's_8', 's_9', 's_11', 's_12', 's_13', 's_14', 's_15', 's_17', 's_20', 's_21']
                     
                     col_space1, col_graph, col_space2 = st.columns([1, 2, 1])
                     with col_graph:

@@ -64,7 +64,7 @@ degradation = st.sidebar.slider("Motor İç Yıpranma Seviyesi", min_value=0.0, 
 temp_anomaly = st.sidebar.slider("Dış Hava Sıcaklık Anomalisi (°C)", min_value=-20.0, max_value=40.0, value=0.0, step=5.0)
 altitude_stress = st.sidebar.slider("İrtifa / Basınç Stresi", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
 
-# --- Agresif / Standart Mod Switch ---
+# --- Agresif / Standart Mod Switch (Toggle) ---
 st.sidebar.markdown("**Uçuş Profili**")
 is_aggressive = st.sidebar.toggle("🚀 Agresif Uçuş Modu", value=False)
 flight_mode = "Agresif (Test/Askeri)" if is_aggressive else "Standart (Ticari Uçuş)"
@@ -157,6 +157,10 @@ if st.session_state.aktif_sekme == "telemetri":
 # 2. MOD: TEKİL ANALİZ (SHAP & SCADA)
 # ==========================================
 else:
+    # Telemetri sekmesinden kalma geçmişi ve grafikleri tamamen temizliyoruz
+    if 'rul_history' in st.session_state:
+        del st.session_state.rul_history
+
     st.markdown("### Uçuş Güvenliği ve Karar Mekanizması Analizi")
     if st.button("🚀 Sensör Durumunu Analiz Et", type="primary"):
         with st.spinner('Yapay Zeka FD004 Verilerini Yorumluyor...'):
